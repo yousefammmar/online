@@ -77,6 +77,38 @@
           <p style="margin-top: 1rem; text-align: center; font-size: 0.9rem;">
             Already have an account? <a href="#" id="link-login" style="color: var(--primary);">Log in</a>
           </p>
+          <p style="margin-top: 0.5rem; text-align: center; font-size: 0.8rem;">
+            Are you a manager? <a href="#" id="link-register-admin" style="color: var(--secondary);">Register as
+              Admin</a>
+          </p>
+        </form>
+      </section>
+
+      <section id="register-admin-view" class="view-section glass-panel" style="max-width: 400px; margin: 0 auto;">
+        <h2>Admin Registration</h2>
+        <p>Create a management account.</p>
+        <form id="register-admin-form" style="margin-top: 1.5rem;">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="admin-reg-name" required>
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="admin-reg-email" required>
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="admin-reg-password" required>
+          </div>
+          <div class="form-group">
+            <label>Admin Secret Code</label>
+            <input type="password" id="admin-reg-code" placeholder="Enter code to verify" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; filter: hue-rotate(45deg);">Register
+            Admin</button>
+          <p style="margin-top: 1rem; text-align: center; font-size: 0.9rem;">
+            Back to <a href="#" id="link-back-register" style="color: var(--primary);">Standard User Sign Up</a>
+          </p>
         </form>
       </section>
 

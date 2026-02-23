@@ -20,8 +20,11 @@ const navAdmin = document.getElementById('nav-admin');
 // Auth DOM
 const loginForm = document.getElementById('login-form');
 const registerForm = document.getElementById('register-form');
+const registerAdminForm = document.getElementById('register-admin-form'); // Added
 const linkRegister = document.getElementById('link-register');
 const linkLogin = document.getElementById('link-login');
+const linkRegisterAdmin = document.getElementById('link-register-admin'); // Added
+const linkBackRegister = document.getElementById('link-back-register'); // Added
 
 // Admin DOM
 const adminServiceForm = document.getElementById('admin-service-form');
@@ -159,6 +162,8 @@ function setupEventListeners() {
   // Auth Forms
   linkRegister.addEventListener('click', (e) => { e.preventDefault(); navigate('register-view'); });
   linkLogin.addEventListener('click', (e) => { e.preventDefault(); navigate('login-view'); });
+  linkRegisterAdmin.addEventListener('click', (e) => { e.preventDefault(); navigate('register-admin-view'); }); // Added
+  linkBackRegister.addEventListener('click', (e) => { e.preventDefault(); navigate('register-view'); }); // Added
 
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -197,6 +202,28 @@ function setupEventListeners() {
       updateAuthUI();
       navigate('book-view');
       registerForm.reset();
+      showToast(data.message);
+    } catch (err) { showToast(err.message, 'error'); }
+  });
+
+  registerAdminForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const full_name = document.getElementById('admin-reg-name').value;
+    const email = document.getElementById('admin-reg-email').value;
+    const password = document.getElementById('admin-reg-password').value;
+    const admin_code = document.getElementById('admin-reg-code').value;
+    try {
+      const res = await apiFetch('/auth/register-admin', {
+        method: 'POST',
+        body: JSON.stringify({ full_name, email, password, admin_code })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      currentUser = data.user;
+      updateAuthUI();
+      navigate('book-view');
+      registerAdminForm.reset();
       showToast(data.message);
     } catch (err) { showToast(err.message, 'error'); }
   });

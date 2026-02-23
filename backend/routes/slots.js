@@ -37,6 +37,28 @@ router.post('/admin', requireAuth, requireAdmin, (req, res) => {
     }
 });
 
+// Admin Update Slot
+router.put('/admin/:id', requireAuth, requireAdmin, (req, res) => {
+    const { id } = req.params;
+    const { start_datetime, capacity } = req.body;
+
+    try {
+        const slot = db.prepare('SELECT * FROM slots WHERE id = ?').get(id);
+        if (!slot) return res.status(404).json({ error: 'Slot not found' });
+
+        // Calculate new available_count based on capacity change
+        const capacityDiff = (capacity || slot.capacity) - slot.capacity;
+        const newAvailableCount = slot.available_count + capacityDiff;
+
+        db.prepare('UPDATE slots SET start_datetime = ?, capacity = ?, available_count = ? WHERE id = ?')
+            .run(start_datetime || slot.start_datetime, capacity || slot.capacity, newAvailableCount, id);
+
+        res.json({ message: 'Slot updated successfully' });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to update slot' });
+    }
+});
+
 // Admin Delete Slot
 router.delete('/admin/:id', requireAuth, requireAdmin, (req, res) => {
     const { id } = req.params;
