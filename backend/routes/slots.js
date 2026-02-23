@@ -7,11 +7,19 @@ const { requireAuth, requireAdmin } = require('../middleware');
 router.get('/', (req, res) => {
     const service_id = req.query.service_id;
     try {
+        const now = new Date().toISOString();
+
+        // Automatic cleanup of past data
+        db.transaction(() => {
+            db.prepare('DELETE FROM bookings WHERE slot_id IN (SELECT id FROM slots WHERE start_datetime < ?)').run(now);
+            db.prepare('DELETE FROM slots WHERE start_datetime < ?').run(now);
+        })();
+
         let slots;
         if (service_id) {
-            slots = db.prepare('SELECT * FROM slots WHERE service_id = ? AND available_count > 0 ORDER BY start_datetime').all(service_id);
+            slots = db.prepare('SELECT * FROM slots WHERE service_id = ? AND available_count > 0 AND start_datetime > ? ORDER BY start_datetime').all(service_id, now);
         } else {
-            slots = db.prepare('SELECT * FROM slots WHERE available_count > 0 ORDER BY start_datetime').all();
+            slots = db.prepare('SELECT * FROM slots WHERE available_count > 0 AND start_datetime > ? ORDER BY start_datetime').all(now);
         }
         res.json(slots);
     } catch (err) {
@@ -40,7 +48,7 @@ router.post('/admin', requireAuth, requireAdmin, (req, res) => {
 // Admin Update Slot
 router.put('/admin/:id', requireAuth, requireAdmin, (req, res) => {
     const { id } = req.params;
-    const { start_datetime, capacity } = req.body;
+    const { service_id, start_datetime, capacity } = req.body;
 
     try {
         const slot = db.prepare('SELECT * FROM slots WHERE id = ?').get(id);
@@ -50,8 +58,14 @@ router.put('/admin/:id', requireAuth, requireAdmin, (req, res) => {
         const capacityDiff = (capacity || slot.capacity) - slot.capacity;
         const newAvailableCount = slot.available_count + capacityDiff;
 
-        db.prepare('UPDATE slots SET start_datetime = ?, capacity = ?, available_count = ? WHERE id = ?')
-            .run(start_datetime || slot.start_datetime, capacity || slot.capacity, newAvailableCount, id);
+        db.prepare('UPDATE slots SET service_id = ?, start_datetime = ?, capacity = ?, available_count = ? WHERE id = ?')
+            .run(
+                service_id || slot.service_id,
+                start_datetime || slot.start_datetime,
+                capacity || slot.capacity,
+                newAvailableCount,
+                id
+            );
 
         res.json({ message: 'Slot updated successfully' });
     } catch (err) {

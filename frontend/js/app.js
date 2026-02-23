@@ -38,6 +38,7 @@ const toastContainer = document.getElementById('toast-container');
 let currentUser = null;
 let selectedServiceId = null;
 let selectedSlotId = null;
+let editingSlotId = null; // Added
 
 // Initialization
 document.addEventListener('DOMContentLoaded', async () => {
@@ -89,8 +90,21 @@ function navigate(targetId) {
     if (v.id === targetId) v.classList.add('active');
   });
 
+  // Flow resets
+  if (targetId === 'book-view') {
+    step2.style.display = 'none';
+    step1.style.display = 'block';
+    selectedServiceId = null;
+    selectedSlotId = null;
+    bookingCtaContainer.style.display = 'none';
+  }
+
   if (targetId === 'dashboard-view') fetchMyBookings();
-  if (targetId === 'admin-view') fetchAdminBookings();
+  if (targetId === 'admin-view') {
+    fetchAdminBookings();
+    fetchAdminSlots();
+    populateAdminServiceDropdown();
+  }
 }
 
 function updateAuthUI() {
@@ -174,8 +188,8 @@ function setupEventListeners() {
         method: 'POST',
         body: JSON.stringify({ email, password })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const data = await res.json().catch(() => ({ error: 'Server returned non-JSON response' }));
+      if (!res.ok) throw new Error(data.error || 'Login failed');
 
       currentUser = data.user;
       updateAuthUI();
@@ -195,8 +209,8 @@ function setupEventListeners() {
         method: 'POST',
         body: JSON.stringify({ full_name, email, password })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const data = await res.json().catch(() => ({ error: 'Server error' }));
+      if (!res.ok) throw new Error(data.error || 'Registration failed');
 
       currentUser = data.user;
       updateAuthUI();
@@ -217,12 +231,12 @@ function setupEventListeners() {
         method: 'POST',
         body: JSON.stringify({ full_name, email, password, admin_code })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const data = await res.json().catch(() => ({ error: 'Server error' }));
+      if (!res.ok) throw new Error(data.error || 'Admin Registration failed');
 
       currentUser = data.user;
       updateAuthUI();
-      navigate('book-view');
+      navigate('admin-view'); // Redirect to admin panel for admins
       registerAdminForm.reset();
       showToast(data.message);
     } catch (err) { showToast(err.message, 'error'); }
@@ -241,6 +255,7 @@ function setupEventListeners() {
       showToast('Service created', 'success');
       adminServiceForm.reset();
       fetchServices();
+      populateAdminServiceDropdown(); // Sync dropdown
     } catch (err) { showToast(err.message, 'error'); }
   });
 
@@ -252,13 +267,110 @@ function setupEventListeners() {
     const capacity = parseInt(document.getElementById('admin-slot-cap').value);
 
     try {
-      const res = await apiFetch('/slots/admin', { method: 'POST', body: JSON.stringify({ service_id, start_datetime, capacity }) });
-      if (!res.ok) throw new Error('Failed to create slot');
-      showToast('Slot created', 'success');
-      adminSlotForm.reset();
+      let res;
+      if (editingSlotId) {
+        res = await apiFetch(`/slots/admin/${editingSlotId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ service_id, start_datetime, capacity })
+        });
+      } else {
+        res = await apiFetch('/slots/admin', {
+          method: 'POST',
+          body: JSON.stringify({ service_id, start_datetime, capacity })
+        });
+      }
+
+      if (!res.ok) throw new Error('Failed to save slot');
+      showToast(editingSlotId ? 'Slot updated' : 'Slot created', 'success');
+      resetSlotForm();
+      fetchAdminSlots();
     } catch (err) { showToast(err.message, 'error'); }
   });
+
+  document.getElementById('admin-slot-cancel').addEventListener('click', resetSlotForm);
 }
+
+function resetSlotForm() {
+  editingSlotId = null;
+  adminSlotForm.reset();
+  document.getElementById('admin-slot-submit').innerText = 'Add Slot';
+  document.getElementById('admin-slot-cancel').style.display = 'none';
+}
+
+async function populateAdminServiceDropdown() {
+  const dropdown = document.getElementById('admin-slot-srv');
+  try {
+    const res = await apiFetch('/services');
+    const services = await res.json();
+    dropdown.innerHTML = '<option value="">Select Service</option>';
+    services.forEach(s => {
+      dropdown.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+    });
+  } catch (e) { }
+}
+
+async function fetchAdminSlots() {
+  const list = document.getElementById('admin-slots-list');
+  list.innerHTML = '<div class="loading-spinner"></div>';
+  try {
+    const res = await apiFetch('/slots');
+    const slots = await res.json();
+    renderAdminSlots(slots, list);
+  } catch (e) {
+    list.innerHTML = '<div class="empty-state">Failed to load slots.</div>';
+  }
+}
+
+function renderAdminSlots(slots, container) {
+  container.innerHTML = '';
+  if (slots.length === 0) {
+    container.innerHTML = '<p class="text-muted">No slots defined yet.</p>';
+    return;
+  }
+
+  slots.forEach(slot => {
+    const item = document.createElement('div');
+    item.className = 'booking-item';
+    const date = new Date(slot.start_datetime);
+
+    item.innerHTML = `
+      <div class="booking-info">
+        <div style="font-size:0.8rem; color:var(--text-muted);">Slot ID: ${slot.id} | Service ID: ${slot.service_id}</div>
+        <div style="font-weight:600; margin-top:0.2rem;">${date.toLocaleString()}</div>
+        <div style="font-size:0.9rem; color:var(--secondary);">Capacity: ${slot.capacity} | Available: ${slot.available_count}</div>
+      </div>
+      <div style="display:flex; gap:0.5rem;">
+        <button class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="editSlot(${slot.id}, ${slot.service_id}, '${slot.start_datetime}', ${slot.capacity})">Edit</button>
+        <button class="btn btn-danger" style="padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="deleteSlot(${slot.id})">Delete</button>
+      </div>
+    `;
+    container.appendChild(item);
+  });
+}
+
+window.editSlot = function (id, serviceId, time, capacity) {
+  editingSlotId = id;
+  document.getElementById('admin-slot-srv').value = serviceId;
+
+  // Truncate ISO string (2026-02-25T10:00:00.000Z) to datetime-local format (2026-02-25T10:00)
+  const formattedTime = time.substring(0, 16);
+  document.getElementById('admin-slot-time').value = formattedTime;
+
+  document.getElementById('admin-slot-cap').value = capacity;
+  document.getElementById('admin-slot-submit').innerText = 'Update Slot';
+  document.getElementById('admin-slot-cancel').style.display = 'inline-block';
+  document.getElementById('admin-slot-form').scrollIntoView({ behavior: 'smooth' });
+};
+
+window.deleteSlot = async function (id) {
+  if (!confirm('Are you sure you want to delete this slot? All bookings for it will be lost!')) return;
+  try {
+    const res = await apiFetch(`/slots/admin/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Delete failed');
+    showToast('Slot deleted');
+    fetchAdminSlots();
+  } catch (err) { showToast(err.message, 'error'); }
+};
 
 // Fetch Services
 async function fetchServices() {

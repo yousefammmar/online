@@ -175,19 +175,31 @@
           <form id="admin-slot-form"
             style="display: flex; gap: 1rem; align-items: flex-end; margin-top: 1rem; flex-wrap: wrap;">
             <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
-              <label>Service ID</label>
-              <input type="number" id="admin-slot-srv" required>
+              <label>Service</label>
+              <select id="admin-slot-srv" required>
+                <option value="">Select Service</option>
+              </select>
             </div>
             <div class="form-group" style="margin-bottom: 0; flex: 2; min-width: 200px;">
-              <label>Start Datetime (ISO)</label>
-              <input type="text" id="admin-slot-time" placeholder="2026-02-25T10:00:00Z" required>
+              <label>Start Date & Time</label>
+              <input type="datetime-local" id="admin-slot-time" required>
             </div>
             <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 100px;">
               <label>Capacity</label>
               <input type="number" id="admin-slot-cap" value="1" required>
             </div>
-            <button type="submit" class="btn btn-primary">Add Slot</button>
+            <button type="submit" class="btn btn-primary" id="admin-slot-submit">Add Slot</button>
+            <button type="button" class="btn" id="admin-slot-cancel"
+              style="display:none; background:rgba(255,255,255,0.1);">Cancel Edit</button>
           </form>
+        </div>
+
+        <div style="margin-top: 3rem;">
+          <h3>Manage Slots</h3>
+          <p>View and edit existing availability.</p>
+          <div id="admin-slots-list" class="bookings-list" style="margin-top: 1rem;">
+            <!-- Rendered by JS -->
+          </div>
         </div>
 
         <div style="margin-top: 3rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem;">

@@ -42,16 +42,17 @@ router.post('/', requireAuth, (req, res) => {
 // View My Bookings
 router.get('/', requireAuth, (req, res) => {
     const user_id = req.user.userId;
+    const now = new Date().toISOString();
     try {
         const query = `
       SELECT b.id, b.status, b.created_at, srv.name as service_name, sl.start_datetime 
       FROM bookings b
       JOIN services srv ON b.service_id = srv.id
       JOIN slots sl ON b.slot_id = sl.id
-      WHERE b.user_id = ?
+      WHERE b.user_id = ? AND sl.start_datetime > ?
       ORDER BY sl.start_datetime
     `;
-        const bookings = db.prepare(query).all(user_id);
+        const bookings = db.prepare(query).all(user_id, now);
         res.json(bookings);
     } catch (err) {
         res.status(500).json({ error: 'Failed to fetch bookings' });
@@ -89,6 +90,7 @@ router.delete('/:id', requireAuth, (req, res) => {
 
 // Admin View All Bookings
 router.get('/admin', requireAuth, requireAdmin, (req, res) => {
+    const now = new Date().toISOString();
     try {
         const query = `
       SELECT b.id, b.status, b.created_at, u.full_name, u.email, srv.name as service_name, sl.start_datetime 
@@ -96,9 +98,10 @@ router.get('/admin', requireAuth, requireAdmin, (req, res) => {
       JOIN users u ON b.user_id = u.id
       JOIN services srv ON b.service_id = srv.id
       JOIN slots sl ON b.slot_id = sl.id
+      WHERE sl.start_datetime > ?
       ORDER BY sl.start_datetime
     `;
-        const bookings = db.prepare(query).all();
+        const bookings = db.prepare(query).all(now);
         res.json(bookings);
     } catch (err) {
         res.status(500).json({ error: 'Failed to fetch all bookings' });

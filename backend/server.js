@@ -30,6 +30,11 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 
 // No fallback needed for this specific SPA built on a single index.html
 
+// 404 handler for API
+app.use('/api', (req, res) => {
+    res.status(404).json({ error: 'API endpoint not found' });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
