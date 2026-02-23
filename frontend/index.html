@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Huawei | Premium Booking</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+  <div class="glow-bg">
+    <div class="glow-blob purple"></div>
+    <div class="glow-blob blue"></div>
+  </div>
+
+  <div class="app-container">
+    <header>
+      <div class="logo">
+        <img src="./assets/logo.png" alt="Huawei Logo" style="height: 32px; width: auto;">
+        Huawei
+      </div>
+      <nav id="main-nav">
+        <button class="nav-btn active" data-target="book-view">Book a Service</button>
+        <button class="nav-btn" data-target="dashboard-view" id="nav-my-bookings" style="display:none;">My
+          Bookings</button>
+        <button class="nav-btn" data-target="admin-view" id="nav-admin" style="display:none;">Admin Panel</button>
+      </nav>
+      <div class="auth-controls" id="auth-controls">
+        <!-- Rendered by JS -->
+      </div>
+    </header>
+
+    <main>
+      <!-- Auth Views -->
+      <section id="login-view" class="view-section glass-panel" style="max-width: 400px; margin: 0 auto;">
+        <h2>Welcome Back</h2>
+        <p>Log in to manage your bookings.</p>
+        <form id="login-form" style="margin-top: 1.5rem;">
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="login-email" required>
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-password" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Log In</button>
+          <p style="margin-top: 1rem; text-align: center; font-size: 0.9rem;">
+            Don't have an account? <a href="#" id="link-register" style="color: var(--primary);">Sign up</a>
+          </p>
+        </form>
+      </section>
+
+      <section id="register-view" class="view-section glass-panel" style="max-width: 400px; margin: 0 auto;">
+        <h2>Create Account</h2>
+        <p>Join Huawei to book premium services.</p>
+        <form id="register-form" style="margin-top: 1.5rem;">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="reg-name" required>
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="reg-email" required>
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="reg-password" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Register</button>
+          <p style="margin-top: 1rem; text-align: center; font-size: 0.9rem;">
+            Already have an account? <a href="#" id="link-login" style="color: var(--primary);">Log in</a>
+          </p>
+        </form>
+      </section>
+
+      <!-- Booking Flow View -->
+      <section id="book-view" class="view-section active">
+        <div id="step-1" class="glass-panel">
+          <h2>Select a Service</h2>
+          <p>Choose from our premium offerings below.</p>
+          <div id="services-grid" class="services-grid">
+            <div class="loading-spinner"></div>
+          </div>
+        </div>
+
+        <div id="step-2" class="glass-panel" style="display: none; margin-top: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2>Available Slots</h2>
+            <button class="btn btn-danger" style="padding: 0.5rem 1rem;" id="btn-back-services">Change Service</button>
+          </div>
+          <p>Select a time that works best for you.</p>
+          <div id="slots-grid" class="slots-grid"></div>
+
+          <div id="booking-cta-container"
+            style="display: none; margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem; text-align: center;">
+            <p id="booking-msg" style="margin-bottom: 1rem;"></p>
+            <button class="btn btn-primary" id="btn-submit-booking" style="display:none; margin: 0 auto;">Confirm
+              Booking</button>
+            <button class="btn btn-primary" id="btn-login-to-book" style="display:none; margin: 0 auto;">Log in to
+              Book</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- User Dashboard View -->
+      <section id="dashboard-view" class="view-section glass-panel">
+        <h2>Your Bookings</h2>
+        <p>Manage your upcoming appointments.</p>
+        <div id="bookings-list" class="bookings-list" style="margin-top: 2rem;">
+          <div class="loading-spinner"></div>
+        </div>
+      </section>
+
+      <!-- Admin View -->
+      <section id="admin-view" class="view-section glass-panel">
+        <h2>Admin Dashboard</h2>
+        <p>Manage all bookings, services, and system slots.</p>
+
+        <div style="margin-top: 2rem;">
+          <h3>Create Service</h3>
+          <form id="admin-service-form" style="display: flex; gap: 1rem; align-items: flex-end; margin-top: 1rem;">
+            <div class="form-group" style="margin-bottom: 0; flex: 1;">
+              <label>Service Name</label>
+              <input type="text" id="admin-srv-name" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0; flex: 2;">
+              <label>Description</label>
+              <input type="text" id="admin-srv-desc">
+            </div>
+            <button type="submit" class="btn btn-primary">Add</button>
+          </form>
+        </div>
+
+        <div style="margin-top: 3rem;">
+          <h3>Create Availability Slot</h3>
+          <form id="admin-slot-form"
+            style="display: flex; gap: 1rem; align-items: flex-end; margin-top: 1rem; flex-wrap: wrap;">
+            <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
+              <label>Service ID</label>
+              <input type="number" id="admin-slot-srv" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0; flex: 2; min-width: 200px;">
+              <label>Start Datetime (ISO)</label>
+              <input type="text" id="admin-slot-time" placeholder="2026-02-25T10:00:00Z" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 100px;">
+              <label>Capacity</label>
+              <input type="number" id="admin-slot-cap" value="1" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Slot</button>
+          </form>
+        </div>
+
+        <div style="margin-top: 3rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem;">
+          <h3>All System Bookings</h3>
+          <div id="admin-bookings-list" class="bookings-list" style="margin-top: 1rem;">
+            <div class="loading-spinner"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script src="./js/app.js"></script>
+</body>
+
+</html>
